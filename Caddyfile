@@ -1,0 +1,15 @@
+:8081 {
+  @allowed {
+    method GET
+    path /api/mess/menus /api/mess/capacities /api/registration /api/config/meal-timings
+  }
+
+  handle @allowed {
+    reverse_proxy https://mess.iiit.ac.in {
+      header_up Host mess.iiit.ac.in
+      header_up Authorization {$MESS_API_KEY}
+    }
+  }
+
+  respond 403
+}
