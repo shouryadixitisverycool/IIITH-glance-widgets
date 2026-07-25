@@ -114,11 +114,12 @@ The number of assignments to show before the "SHOW MORE" button appears.
 
 ## How It Works
 
-```text
-Glance -> iiith-widgets:8081 -> Caddy -> IIITH OpenVPN -> Mess/Courier APIs
-Glance -> iiith-widgets:8081 -> Caddy -> iCal helper -> IIITH OpenVPN -> Moodle calendar
-   |
-   +-> every other widget -> normal Docker/host internet route
+```mermaid
+flowchart LR
+    glance[Glance] --> widgets["iiith-widgets:8081"] --> caddy[Caddy]
+    caddy --> vpn[IIITH OpenVPN] --> apis["Mess / Courier APIs"]
+    caddy --> ical[iCal helper] --> vpn --> moodle[Moodle calendar]
+    glance --> others[Every other widget] --> internet["Normal Docker / host internet route"]
 ```
 
 The VPN, proxy, and iCal helper share one isolated network namespace. OpenVPN installs only IIITH private-network routes, so neither the host nor unrelated Glance widgets are sent through the college VPN.
