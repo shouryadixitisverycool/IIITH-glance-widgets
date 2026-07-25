@@ -12,6 +12,7 @@ A collection of [Glance](https://github.com/glanceapp/glance) widgets for IIIT r
 
 See all four meal registrations at a glance.
 
+[<img src="assets/mess/default-yuk.png" alt="Default style showing Yuktahar" width="240">](assets/mess/default-yuk.png)
 
 #### Properties
 
