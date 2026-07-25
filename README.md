@@ -40,8 +40,6 @@ Whether to show the selected meal's menu.
 
 Used to change the appearance of the widget. Possible values are `default`, `bubbles`, and `singular`.
 
-Style previews by meal state. Click a screenshot to view it at full size.
-
 | State | `default` | `bubbles` | `singular` |
 | --- | --- | --- | --- |
 | Yuktahar | [<img src="assets/mess/default-yuk.png" alt="Default style showing Yuktahar" width="240">](assets/mess/default-yuk.png) | [<img src="assets/mess/bubbles-yuk.png" alt="Bubbles style showing Yuktahar" width="240">](assets/mess/bubbles-yuk.png) | [<img src="assets/mess/singular-yuk.png" alt="Singular style showing Yuktahar" width="240">](assets/mess/singular-yuk.png) |
@@ -58,7 +56,7 @@ Only show menu categories in this list. Matching is case-insensitive and support
 
 ##### `category-blacklist`
 
-Hide menu categories in this list. It cannot be used together with `category-whitelist`.
+Hide menu categories in this list. Cannot be used together with `category-whitelist`.
 
 [Installation Instructions](docs/install-mess.md)
 
@@ -80,7 +78,7 @@ The number of couriers to show before the "SHOW MORE" button appears.
 
 ### Moodle Timeline
 
-Keep upcoming Moodle assignment deadlines on your dashboard, with direct links, exact due dates, and relative countdowns. The default view includes up to 10 events from the next 60 days and collapses after five.
+Keep upcoming Moodle assignment deadlines on your dashboard, with direct links, exact due dates, and relative countdowns.
 
 #### Properties
 
