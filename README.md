@@ -137,7 +137,7 @@ The VPN, proxy, and iCal helper share one isolated network namespace. OpenVPN in
 
 ## Credits
 
-Mess API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP).
+Mess API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP).  
 Moodle calendar parsing uses [AWildLeon/Glance-iCal-Events](https://github.com/AWildLeon/Glance-iCal-Events).
 
 ## License
