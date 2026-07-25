@@ -1,0 +1,35 @@
+- type: custom-api
+  title: Moodle Timeline
+  cache: 15m
+  url: http://iiith-widgets:8081/events
+  parameters:
+    url: ${MOODLE_ICAL_URL}
+    limit: 10
+    lookback_days: 0
+    horizon_days: 60
+  options:
+    collapseAfter: 5
+  template: |
+    {{ $events := .JSON.Array "events" }}
+    {{ if eq (len $events) 0 }}
+      <div class="color-subdue">No upcoming assignments.</div>
+    {{ else }}
+      <ul class="list list-gap-10 collapsible-container" data-collapse-after="{{ .Options.IntOr "collapseAfter" 5 }}">
+        {{ range $events }}
+          {{ $deadline := (.String "start" | parseTime "rfc3339").In now.Location }}
+          {{ $name := .String "name" }}
+          {{ $url := .String "url" }}
+          <li>
+            {{ if $url }}
+              <a class="size-h4 color-highlight block text-truncate" href="{{ $url }}" target="_blank" rel="noreferrer" title="{{ $name }}">{{ $name }}</a>
+            {{ else }}
+              <span class="size-h4 color-highlight block text-truncate" title="{{ $name }}">{{ $name }}</span>
+            {{ end }}
+            <div class="flex justify-between size-h6">
+              <span>{{ $deadline.Format "Mon 2 Jan, 15:04" }}</span>
+              <span class="color-primary" {{ $deadline | toRelativeTime }}></span>
+            </div>
+          </li>
+        {{ end }}
+      </ul>
+    {{ end }}

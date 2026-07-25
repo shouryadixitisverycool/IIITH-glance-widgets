@@ -1,0 +1,361 @@
+- type: custom-api
+  title: Today's Mess
+  cache: 1m
+  url: ${IIITH_WIDGETS_PROXY_URL}/api/mess/menus
+  subrequests:
+    registrations:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/registration
+    timings:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/config/meal-timings
+    breakfastExtras:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/registrations/extras?meal=breakfast
+    lunchExtras:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/registrations/extras?meal=lunch
+    snacksExtras:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/registrations/extras?meal=snacks
+    dinnerExtras:
+      url: ${IIITH_WIDGETS_PROXY_URL}/api/registrations/extras?meal=dinner
+  options:
+    timingMess: yuktahar
+    collapseAfter: 6
+    menu: true
+    style: default
+    category-whitelist: []
+    category-blacklist: []
+  template: |
+    <style>
+      .registrations-iiith-mess {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem 1rem;
+      }
+
+      .default-meal-link-iiith-mess { cursor: pointer; }
+      .default-meal-link-iiith-mess:hover { text-decoration: underline; }
+
+      .meal-selector-iiith-mess > input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .meal-bubbles-iiith-mess {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 0.55rem;
+      }
+
+      .meal-bubble-iiith-mess {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        min-width: 0;
+        border: 2px solid var(--color-text-subdue);
+        border-radius: 50%;
+        color: #a1a1a1;
+        cursor: pointer;
+        font-size: 1.5rem;
+        font-weight: 700;
+        transition: border-color 120ms ease, transform 120ms ease;
+      }
+
+      .meal-bubble-iiith-mess:hover { transform: translateY(-2px); }
+      .meal-bubble-unregistered { background: #12151b; }
+      .meal-bubble-skipped { background: #5c470f; }
+      .meal-bubble-cancelled { background: #461f1c; }
+      .meal-bubble-palash { background: hsl(256 35% 42%); }
+      .meal-bubble-kadamba { background: #0a3a0a; }
+      .meal-bubble-kadamba-nonveg { background: #540a1e; }
+      .meal-bubble-yuktahar { background: #0a382f; }
+      .meal-bubble-yuktahar-jain { background: #1f350a; }
+      .meal-bubble-registered { background: var(--color-positive); }
+
+      .singular-header-iiith-mess {
+        display: grid;
+        grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+        align-items: center;
+        gap: 0.8rem;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .singular-title-iiith-mess {
+        overflow: hidden;
+        font-size: var(--font-size-h3);
+        font-weight: 700;
+        line-height: 1.35;
+        text-align: center;
+        text-transform: capitalize;
+      }
+
+      .singular-title-iiith-mess > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .singular-arrow-iiith-mess {
+        position: relative;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+        transform: translateX(calc(var(--meal-direction, 1) * 2rem));
+        transition: transform 120ms;
+        z-index: 1;
+      }
+
+      @keyframes singularArrowAnchor {
+        from { transform: translateX(calc(var(--meal-direction, 1) * -0.8rem)); }
+      }
+
+      .singular-arrow-iiith-mess::before {
+        content: "";
+        position: absolute;
+        inset: -0.2rem;
+        border-radius: var(--border-radius);
+        background: var(--color-text-subdue);
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: -1;
+      }
+
+      .singular-arrow-iiith-mess:hover::before { opacity: 0.4; }
+      .singular-heading-unregistered { color: var(--color-text-subdue); }
+      .singular-heading-skipped { color: #f9d65c; }
+      .singular-heading-cancelled { color: #ffc2b5; }
+      .singular-heading-palash { color: hsl(256 55% 68%); }
+      .singular-heading-kadamba { color: #70ff94; }
+      .singular-heading-kadamba-nonveg { color: #ffa2b8; }
+      .singular-heading-yuktahar { color: #77f8e1; }
+      .singular-heading-yuktahar-jain { color: #bbf467; }
+      .singular-heading-registered { color: var(--color-positive); }
+
+      #iiith-mess-breakfast:checked ~ .meal-bubbles-iiith-mess label[for="iiith-mess-breakfast"],
+      #iiith-mess-lunch:checked ~ .meal-bubbles-iiith-mess label[for="iiith-mess-lunch"],
+      #iiith-mess-snacks:checked ~ .meal-bubbles-iiith-mess label[for="iiith-mess-snacks"],
+      #iiith-mess-dinner:checked ~ .meal-bubbles-iiith-mess label[for="iiith-mess-dinner"] {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 1px var(--color-primary);
+      }
+
+      .meal-panels-iiith-mess {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .meal-panel-iiith-mess {
+        position: absolute;
+        inset: 0 0 auto;
+        min-width: 0;
+        padding-bottom: 0.6rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(calc(var(--meal-direction, 1) * -2rem));
+        pointer-events: none;
+        transition:
+          opacity 120ms,
+          transform 120ms,
+          visibility 0s 120ms;
+      }
+
+      @keyframes mealPanelEntrance {
+        from {
+          opacity: 0;
+          transform: translateX(calc(var(--meal-direction, 1) * 0.8rem));
+        }
+      }
+
+      #iiith-mess-breakfast:checked ~ .meal-panels-iiith-mess .meal-panel-breakfast,
+      #iiith-mess-lunch:checked ~ .meal-panels-iiith-mess .meal-panel-lunch,
+      #iiith-mess-snacks:checked ~ .meal-panels-iiith-mess .meal-panel-snacks,
+      #iiith-mess-dinner:checked ~ .meal-panels-iiith-mess .meal-panel-dinner {
+        opacity: 1;
+        visibility: visible;
+        position: relative;
+        transform: none;
+        pointer-events: auto;
+        transition: none;
+        animation: mealPanelEntrance 500ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      }
+
+      #iiith-mess-breakfast:checked ~ .meal-panels-iiith-mess .meal-panel-breakfast .singular-arrow-iiith-mess,
+      #iiith-mess-lunch:checked ~ .meal-panels-iiith-mess .meal-panel-lunch .singular-arrow-iiith-mess,
+      #iiith-mess-snacks:checked ~ .meal-panels-iiith-mess .meal-panel-snacks .singular-arrow-iiith-mess,
+      #iiith-mess-dinner:checked ~ .meal-panels-iiith-mess .meal-panel-dinner .singular-arrow-iiith-mess {
+        transform: none;
+        transition: none;
+        animation: singularArrowAnchor 500ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      }
+    </style>
+
+    {{ $regs := (.Subrequest "registrations").JSON }}
+    {{ $categoryWhitelist := .Options.JSON "category-whitelist" }}
+    {{ $categoryBlacklist := .Options.JSON "category-blacklist" }}
+    {{ if and (ne $categoryWhitelist "[]") (ne $categoryBlacklist "[]") }}
+      {{ .Options.JSON "ERROR: category-whitelist and category-blacklist cannot both be non-empty" }}
+    {{ end }}
+    {{ $day := now | formatTime "Monday" | replaceAll "Sunday" "sunday" | replaceAll "Monday" "monday" | replaceAll "Tuesday" "tuesday" | replaceAll "Wednesday" "wednesday" | replaceAll "Thursday" "thursday" | replaceAll "Friday" "friday" | replaceAll "Saturday" "saturday" }}
+    {{ $clock := now | formatTime "15:04:05" }}
+    {{ $meal := "" }}
+    {{ $state := "" }}
+    {{ $timingMess := .Options.StringOr "timingMess" "yuktahar" }}
+    {{ range (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
+      {{ if and (ge $clock (.String "start_time")) (lt $clock (.String "end_time")) }}
+        {{ $meal = .String "meal" }}
+        {{ $state = "ongoing" }}
+      {{ else if and (eq $meal "") (lt $clock (.String "start_time")) }}
+        {{ $meal = .String "meal" }}
+        {{ $state = "next" }}
+      {{ end }}
+    {{ end }}
+
+    {{ $style := .Options.StringOr "style" "default" }}
+    {{ if or (eq $style "default") (eq $style "bubbles") (eq $style "singular") }}
+      {{ $selectedMeal := $meal }}
+      {{ if eq $selectedMeal "" }}{{ $selectedMeal = "breakfast" }}{{ end }}
+      {{ $selectedIndex := 0 }}
+      {{ if eq $selectedMeal "lunch" }}{{ $selectedIndex = 1 }}
+      {{ else if eq $selectedMeal "snacks" }}{{ $selectedIndex = 2 }}
+      {{ else if eq $selectedMeal "dinner" }}{{ $selectedIndex = 3 }}{{ end }}
+      <div class="meal-selector-iiith-mess {{ $style }}-iiith-mess" data-selected-meal="{{ $selectedIndex }}">
+        {{ range (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
+          {{ $bubbleMeal := .String "meal" }}
+          <input type="radio" name="iiith-mess-meal" id="iiith-mess-{{ $bubbleMeal }}"{{ if eq $bubbleMeal $selectedMeal }} checked{{ end }}>
+        {{ end }}
+        {{ if eq $style "bubbles" }}
+        <div class="meal-bubbles-iiith-mess">
+          {{ range $bubbleIndex, $bubbleTiming := (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
+            {{ $bubbleMeal := $bubbleTiming.String "meal" }}
+            {{ $bubbleMess := $regs.String (concat "data." $bubbleMeal ".meal_mess") }}
+            {{ $bubbleMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $bubbleMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $bubbleCancelled := $regs.String (concat "data." $bubbleMeal ".cancelled_at") }}
+            {{ $bubbleSkipped := $regs.Bool (concat "data." $bubbleMeal ".metadata.skipping") }}
+            {{ $bubbleClass := "meal-bubble-unregistered" }}
+            {{ if ne $bubbleCancelled "" }}
+              {{ $bubbleClass = "meal-bubble-cancelled" }}
+            {{ else if $bubbleSkipped }}
+              {{ $bubbleClass = "meal-bubble-skipped" }}
+            {{ else if ne $bubbleMess "" }}
+              {{ $bubbleClass = "meal-bubble-registered" }}
+              {{ if ne (findMatch "(?i)palash" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-palash" }}
+              {{ else if ne (findMatch "(?i)kadamba-nonveg" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-kadamba-nonveg" }}
+              {{ else if ne (findMatch "(?i)kadamba" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-kadamba" }}
+              {{ else if ne (findMatch "(?i)yuktahar-jain" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-yuktahar-jain" }}
+              {{ else if ne (findMatch "(?i)yuktahar" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-yuktahar" }}{{ end }}
+            {{ end }}
+            <label class="meal-bubble-iiith-mess {{ $bubbleClass }}" for="iiith-mess-{{ $bubbleMeal }}" data-meal-index="{{ $bubbleIndex }}" onclick="var w=this.closest('.meal-selector-iiith-mess'),n=Number(this.dataset.mealIndex),o=Number(w.dataset.selectedMeal);w.style.setProperty('--meal-direction',n>o?1:-1);w.dataset.selectedMeal=n" title="{{ $bubbleMeal }}: {{ if ne $bubbleCancelled "" }}cancelled{{ else if $bubbleSkipped }}skipped{{ else if ne $bubbleMess "" }}{{ $bubbleMessLabel }}{{ else }}not registered{{ end }}">
+              {{ if eq $bubbleMeal "breakfast" }}B{{ else if eq $bubbleMeal "lunch" }}L{{ else if eq $bubbleMeal "snacks" }}S{{ else }}D{{ end }}
+            </label>
+          {{ end }}
+        </div>
+        {{ else if eq $style "default" }}
+        <div class="registrations-iiith-mess size-h6 margin-bottom-10">
+          {{ range $defaultIndex, $defaultTiming := (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
+            {{ $defaultMeal := $defaultTiming.String "meal" }}
+            {{ $defaultMess := $regs.String (concat "data." $defaultMeal ".meal_mess") }}
+            {{ $defaultMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $defaultMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $defaultCancelled := $regs.String (concat "data." $defaultMeal ".cancelled_at") }}
+            {{ $defaultSkipped := $regs.Bool (concat "data." $defaultMeal ".metadata.skipping") }}
+            {{ $defaultClass := "singular-heading-unregistered" }}
+            {{ if ne $defaultCancelled "" }}{{ $defaultClass = "singular-heading-cancelled" }}
+            {{ else if $defaultSkipped }}{{ $defaultClass = "singular-heading-skipped" }}
+            {{ else if ne (findMatch "(?i)palash" $defaultMess) "" }}{{ $defaultClass = "singular-heading-palash" }}
+            {{ else if ne (findMatch "(?i)kadamba-nonveg" $defaultMess) "" }}{{ $defaultClass = "singular-heading-kadamba-nonveg" }}
+            {{ else if ne (findMatch "(?i)kadamba" $defaultMess) "" }}{{ $defaultClass = "singular-heading-kadamba" }}
+            {{ else if ne (findMatch "(?i)yuktahar-jain" $defaultMess) "" }}{{ $defaultClass = "singular-heading-yuktahar-jain" }}
+            {{ else if ne (findMatch "(?i)yuktahar" $defaultMess) "" }}{{ $defaultClass = "singular-heading-yuktahar" }}{{ end }}
+            <div>
+              <div class="color-subdue" style="text-transform: uppercase;">{{ $defaultMeal }}</div>
+              <div class="{{ $defaultClass }}">
+                {{ if ne $defaultCancelled "" }}Cancelled
+                {{ else if $defaultSkipped }}Skipped
+                {{ else if ne $defaultMess "" }}<label class="default-meal-link-iiith-mess" for="iiith-mess-{{ $defaultMeal }}" data-meal-index="{{ $defaultIndex }}" onclick="var w=this.closest('.meal-selector-iiith-mess'),n=Number(this.dataset.mealIndex),o=Number(w.dataset.selectedMeal);w.style.setProperty('--meal-direction',n>o?1:-1);w.dataset.selectedMeal=n">{{ $defaultMessLabel }}</label>
+                {{ else }}-{{ end }}
+              </div>
+            </div>
+          {{ end }}
+        </div>
+        {{ end }}
+        <div class="meal-panels-iiith-mess margin-top-10">
+          {{ range $panelIndex, $panelTiming := (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
+            {{ $panelMeal := $panelTiming.String "meal" }}
+            {{ $panelMess := $regs.String (concat "data." $panelMeal ".meal_mess") }}
+            {{ $panelMenuMess := $panelMess }}
+            {{ if eq $panelMenuMess "yuktahar-jain" }}{{ $panelMenuMess = "yuktahar" }}{{ end }}
+            {{ $panelMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $panelMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $panelCancelled := $regs.String (concat "data." $panelMeal ".cancelled_at") }}
+            {{ $panelSkipped := $regs.Bool (concat "data." $panelMeal ".metadata.skipping") }}
+            {{ $extrasRequest := "breakfastExtras" }}
+            {{ if eq $panelMeal "lunch" }}{{ $extrasRequest = "lunchExtras" }}
+            {{ else if eq $panelMeal "snacks" }}{{ $extrasRequest = "snacksExtras" }}
+            {{ else if eq $panelMeal "dinner" }}{{ $extrasRequest = "dinnerExtras" }}{{ end }}
+            {{ $headingClass := "singular-heading-unregistered" }}
+            {{ if ne $panelCancelled "" }}
+              {{ $headingClass = "singular-heading-cancelled" }}
+            {{ else if $panelSkipped }}
+              {{ $headingClass = "singular-heading-skipped" }}
+            {{ else if ne $panelMess "" }}
+              {{ $headingClass = "singular-heading-registered" }}
+              {{ if ne (findMatch "(?i)palash" $panelMess) "" }}{{ $headingClass = "singular-heading-palash" }}
+              {{ else if ne (findMatch "(?i)kadamba-nonveg" $panelMess) "" }}{{ $headingClass = "singular-heading-kadamba-nonveg" }}
+              {{ else if ne (findMatch "(?i)kadamba" $panelMess) "" }}{{ $headingClass = "singular-heading-kadamba" }}
+              {{ else if ne (findMatch "(?i)yuktahar-jain" $panelMess) "" }}{{ $headingClass = "singular-heading-yuktahar-jain" }}
+              {{ else if ne (findMatch "(?i)yuktahar" $panelMess) "" }}{{ $headingClass = "singular-heading-yuktahar" }}{{ end }}
+            {{ end }}
+            <div class="meal-panel-iiith-mess meal-panel-{{ $panelMeal }}">
+              {{ if eq $style "singular" }}
+                {{ $previousMeal := "dinner" }}{{ $previousIndex := 3 }}
+                {{ $nextMeal := "lunch" }}{{ $nextIndex := 1 }}
+                {{ if eq $panelMeal "lunch" }}
+                  {{ $previousMeal = "breakfast" }}{{ $previousIndex = 0 }}{{ $nextMeal = "snacks" }}{{ $nextIndex = 2 }}
+                {{ else if eq $panelMeal "snacks" }}
+                  {{ $previousMeal = "lunch" }}{{ $previousIndex = 1 }}{{ $nextMeal = "dinner" }}{{ $nextIndex = 3 }}
+                {{ else if eq $panelMeal "dinner" }}
+                  {{ $previousMeal = "snacks" }}{{ $previousIndex = 2 }}{{ $nextMeal = "breakfast" }}{{ $nextIndex = 0 }}
+                {{ end }}
+                <div class="singular-header-iiith-mess margin-bottom-10">
+                  <label class="singular-arrow-iiith-mess" for="iiith-mess-{{ $previousMeal }}" data-meal-index="{{ $previousIndex }}" onclick="var w=this.closest('.meal-selector-iiith-mess');w.style.setProperty('--meal-direction',-1);w.dataset.selectedMeal=this.dataset.mealIndex" title="Previous meal" aria-label="Previous meal">
+                    <svg stroke="var(--color-text-base)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                  </label>
+                  <div class="singular-title-iiith-mess {{ $headingClass }}">
+                    <div>{{ $panelMeal }}</div>
+                    <div>{{ if ne $panelCancelled "" }}Cancelled{{ else if $panelSkipped }}Skipped{{ else if ne $panelMess "" }}{{ $panelMessLabel }}{{ else }}Not registered{{ end }}</div>
+                  </div>
+                  <label class="singular-arrow-iiith-mess" for="iiith-mess-{{ $nextMeal }}" data-meal-index="{{ $nextIndex }}" onclick="var w=this.closest('.meal-selector-iiith-mess');w.style.setProperty('--meal-direction',1);w.dataset.selectedMeal=this.dataset.mealIndex" title="Next meal" aria-label="Next meal">
+                    <svg stroke="var(--color-text-base)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                  </label>
+                </div>
+              {{ else }}
+                <div class="{{ $headingClass }}" style="text-transform: capitalize;">{{ $panelMeal }}{{ if ne $panelCancelled "" }} - Cancelled{{ else if $panelSkipped }} - Skipped{{ else if ne $panelMess "" }} - {{ $panelMessLabel }}{{ end }}</div>
+              {{ end }}
+              {{ if ne $panelCancelled "" }}
+              {{ else if $panelSkipped }}
+              {{ else if eq $panelMess "" }}
+              {{ else }}
+                {{ range ($.Subrequest $extrasRequest).JSON.Array "data" }}
+                  <div class="margin-top-5"><span class="color-primary">Extra:</span> {{ .String "extra_name" }}{{ if ne (.String "extra_description") "" }} ({{ .String "extra_description" }}){{ end }}</div>
+                {{ end }}
+                {{ if $.Options.BoolOr "menu" true }}
+                  {{ range $.JSON.Array "data" }}
+                    {{ if eq (.String "mess") $panelMenuMess }}
+                      <ul class="list collapsible-container margin-top-5" data-collapse-after="{{ $.Options.IntOr "collapseAfter" 6 }}">
+                        {{ range .Array (concat "days." $day "." $panelMeal) }}
+                          {{ $item := .String "item" }}
+                          {{ $category := .String "category" }}
+                          {{ $categoryPattern := concat "(?i)\"" (replaceAll "/" "\"|\"" $category) "\"" }}
+                          {{ $show := or (eq $categoryWhitelist "[]") (ne (findMatch $categoryPattern $categoryWhitelist) "") }}
+                          {{ if ne (findMatch $categoryPattern $categoryBlacklist) "" }}{{ $show = false }}{{ end }}
+                          {{ if and $show (ne $item "") (ne $item "NA") }}<li>{{ if ne $category "" }}<span class="color-subdue">{{ $category }}:</span> {{ end }}{{ $item }}</li>{{ end }}
+                        {{ end }}
+                      </ul>
+                    {{ end }}
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}

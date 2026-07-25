@@ -1,4 +1,6 @@
 .env
 vpn.env
 mess.env
+proxy.env
 iiith.ovpn
+AGENTS.md

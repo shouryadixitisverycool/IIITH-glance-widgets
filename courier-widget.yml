@@ -1,0 +1,24 @@
+- type: custom-api
+  title: My Couriers
+  title-url: https://courier.iiit.ac.in/student/uncollected
+  cache: 5m
+  url: ${IIITH_WIDGETS_PROXY_URL}/api/student/uncollected
+  options:
+    collapseAfter: 3
+  template: |
+    {{ $packages := .JSON.Array "packages" }}
+    {{ if .JSON.Bool "authExpired" }}
+      <div class="color-negative">Login expired, please refresh the token.</div>
+    {{ else if eq (len $packages) 0 }}
+      <div class="color-subdue">No packages awaiting collection.</div>
+    {{ else }}
+      <div class="size-h3 color-highlight margin-bottom-10">{{ len $packages }} awaiting collection</div>
+      <ul class="list collapsible-container" data-collapse-after="{{ .Options.IntOr "collapseAfter" 3 }}">
+        {{ range $packages }}
+          <li class="flex justify-between items-center">
+            <span>{{ .String "provider" }}</span>
+            <span class="color-subdue" {{ .String "date" | parseTime "RFC3339Nano" | toRelativeTime }}></span>
+          </li>
+        {{ end }}
+      </ul>
+    {{ end }}

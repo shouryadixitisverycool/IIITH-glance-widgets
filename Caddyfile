@@ -1,15 +1,43 @@
 :8081 {
-  @allowed {
-    method GET
-    path /api/mess/menus /api/mess/capacities /api/registration /api/config/meal-timings
-  }
+	@allowed {
+		method GET
+		path /api/mess/menus /api/registration /api/config/meal-timings /api/registrations/extras
+	}
 
-  handle @allowed {
-    reverse_proxy https://mess.iiit.ac.in {
-      header_up Host mess.iiit.ac.in
-      header_up Authorization {$MESS_API_KEY}
-    }
-  }
+	handle @allowed {
+		reverse_proxy https://mess.iiit.ac.in {
+			header_up Host mess.iiit.ac.in
+			header_up Authorization {$MESS_API_KEY}
+		}
+	}
 
-  respond 403
+	@courier {
+		method GET
+		path /api/student/uncollected
+	}
+
+	handle @courier {
+		reverse_proxy https://courier.iiit.ac.in {
+			header_up Host courier.iiit.ac.in
+			header_up Authorization "Bearer {$COURIER_TOKEN}"
+
+			@expired status 401
+			handle_response @expired {
+				header Content-Type application/json
+				respond `{"authExpired":true}` 200
+			}
+		}
+	}
+
+	@moodle {
+		method GET
+		path /events
+		query url=https://courses.iiit.ac.in/*
+	}
+
+	handle @moodle {
+		reverse_proxy localhost:8076
+	}
+
+	respond 403
 }

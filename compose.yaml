@@ -1,3 +1,5 @@
+name: iiith-glance-widgets
+
 services:
   vpn:
     image: qmcgaw/gluetun:latest
@@ -14,7 +16,7 @@ services:
       FIREWALL_INPUT_PORTS: 8081
       DNS_UPSTREAM_RESOLVER_TYPE: plain
       DNS_UPSTREAM_PLAIN_ADDRESSES: 10.4.20.21:53
-      DNS_REBINDING_PROTECTION_EXEMPT_HOSTNAMES: mess.iiit.ac.in
+      DNS_REBINDING_PROTECTION_EXEMPT_HOSTNAMES: mess.iiit.ac.in,courier.iiit.ac.in,courses.iiit.ac.in
       HEALTH_TARGET_ADDRESSES: mess.iiit.ac.in:443
       HEALTH_ICMP_TARGET_IPS: 10.4.20.21
       BLOCK_MALICIOUS: "off"
@@ -23,7 +25,7 @@ services:
     networks:
       glance:
         aliases:
-          - iiith-mess
+          - iiith-widgets
 
   proxy:
     image: caddy:2-alpine
@@ -32,9 +34,17 @@ services:
     depends_on:
       vpn:
         condition: service_healthy
-    env_file: mess.env
+    env_file: proxy.env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
+  ical-api:
+    image: ghcr.io/awildleon/glance-ical-events:v1.3.3
+    restart: unless-stopped
+    network_mode: service:vpn
+    depends_on:
+      vpn:
+        condition: service_healthy
 
 networks:
   glance:

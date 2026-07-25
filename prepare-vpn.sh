@@ -2,7 +2,7 @@
 set -eu
 
 if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-  echo "Usage: $0 /path/to/ubuntu_new.ovpn" >&2
+  echo "Usage: $0 /path/to/profile.ovpn" >&2
   exit 1
 fi
 

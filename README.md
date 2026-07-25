@@ -1,188 +1,144 @@
-# IIITH Mess Widget for Glance
+# IIITH Glance Widgets
 
-A read-only [Glance](https://github.com/glanceapp/glance) widget for the IIIT Hyderabad Mess Management System. It shows today's registrations, the ongoing or next meal at your registered mess, that meal's menu, and live registered capacity.
+> [!WARNING]
+>
+> This project is still in active development so expect stuff to not work and break if you still install it.
 
-![IIITH Mess widget preview](preview.png)
+A collection of [Glance](https://github.com/glanceapp/glance) widgets for IIIT related things. This includes mess registrations, pending couriers, and Moodle assignment deadlines.
 
-The mess portal is only reachable from the IIITH network. This repository includes an isolated OpenVPN sidecar and a restricted reverse proxy so only mess API requests use the college VPN. The host and all other Glance widgets keep their normal internet route.
+## Widgets
 
-## Features
+### Today's Mess
 
-- Today's breakfast, lunch, snacks, and dinner registrations
-- Ongoing meal, or the next meal when none is currently being served
-- Menu for the registered mess
-- Live availability progress bar during an ongoing meal
-- Automatic Asia/Kolkata day and meal selection
-- GET-only proxy restricted to the four API paths used by the widget
-- No host routing changes and no published proxy port
+See all four meal registrations at a glance.
 
-## Requirements
 
-- A Docker-based Glance installation
-- An IIITH account and current OpenVPN profile
-- A Mess Portal API key from [mess.iiit.ac.in](https://mess.iiit.ac.in)
-- The Glance and sidecar containers connected to the same Docker network
+#### Properties
 
-IIITH replaced its VPN certificates on 10 May 2026. Download the latest Ubuntu profile from [vpn.iiit.ac.in](https://vpn.iiit.ac.in/).
+| Name | Type | Required | Default |
+| --- | --- | --- | --- |
+| `timingMess` | string | no | `yuktahar` |
+| `collapseAfter` | integer | no | `6` |
+| `menu` | boolean | no | `true` |
+| `style` | string | no | `default` |
+| `category-whitelist` | array | no | `[]` |
+| `category-blacklist` | array | no | `[]` |
 
-## Installation
+##### `timingMess`
 
-### 1. Clone and configure the repository
+The mess whose serving schedule determines the ongoing or next meal.
 
-```sh
-git clone https://github.com/shouryadixitisverycool/IIITH-mess-widget.git
-cd IIITH-mess-widget
-cp .env.example .env
-cp vpn.env.example vpn.env
-cp mess.env.example mess.env
-```
+##### `collapseAfter`
 
-The default shared network is `glance_default`. Check yours with:
+The number of menu items to show before the "SHOW MORE" button appears.
 
-```sh
-docker inspect glance --format '{{json .NetworkSettings.Networks}}'
-```
+##### `menu`
 
-If it differs, set `GLANCE_NETWORK` in `.env`.
+Whether to show the selected meal's menu.
 
-### 2. Prepare the VPN profile
+##### `style`
 
-Download `ubuntu_new.ovpn` from [vpn.iiit.ac.in](https://vpn.iiit.ac.in/) and run this on the Docker host:
+Used to change the appearance of the widget. Possible values are `default`, `bubbles`, and `singular`.
 
-```sh
-chmod +x prepare-vpn.sh
-./prepare-vpn.sh /path/to/ubuntu_new.ovpn
-```
+Style previews by meal state. Click a screenshot to view it at full size.
 
-The script removes desktop DNS hooks that do not exist in the container and resolves `vpn2.iiit.ac.in` to the IPv4 address required by Gluetun. The generated `iiith.ovpn` is ignored by Git.
+| State | `default` | `bubbles` | `singular` |
+| --- | --- | --- | --- |
+| Yuktahar | [<img src="assets/mess/default-yuk.png" alt="Default style showing Yuktahar" width="240">](assets/mess/default-yuk.png) | [<img src="assets/mess/bubbles-yuk.png" alt="Bubbles style showing Yuktahar" width="240">](assets/mess/bubbles-yuk.png) | [<img src="assets/mess/singular-yuk.png" alt="Singular style showing Yuktahar" width="240">](assets/mess/singular-yuk.png) |
+| Yuktahar (J) | [<img src="assets/mess/default-yuk-j.png" alt="Default style showing Yuktahar Jain" width="240">](assets/mess/default-yuk-j.png) | [<img src="assets/mess/bubbles-yuk-j.png" alt="Bubbles style showing Yuktahar Jain" width="240">](assets/mess/bubbles-yuk-j.png) | [<img src="assets/mess/singular-yuk-j.png" alt="Singular style showing Yuktahar Jain" width="240">](assets/mess/singular-yuk-j.png) |
+| Kadamb (V) | [<img src="assets/mess/default-v.png" alt="Default style showing Kadamb vegetarian" width="240">](assets/mess/default-v.png) | [<img src="assets/mess/bubbles-v.png" alt="Bubbles style showing Kadamb vegetarian" width="240">](assets/mess/bubbles-v.png) | [<img src="assets/mess/singular-v.png" alt="Singular style showing Kadamb vegetarian" width="240">](assets/mess/singular-v.png) |
+| Kadamb (NV) with extra | [<img src="assets/mess/default-nv-extra.png" alt="Default style showing Kadamb non-vegetarian with an extra" width="240">](assets/mess/default-nv-extra.png) | [<img src="assets/mess/bubbles-nv-extra.png" alt="Bubbles style showing Kadamb non-vegetarian with an extra" width="240">](assets/mess/bubbles-nv-extra.png) | [<img src="assets/mess/singular-nv-extra.png" alt="Singular style showing Kadamb non-vegetarian with an extra" width="240">](assets/mess/singular-nv-extra.png) |
+| Skipped | [<img src="assets/mess/default-skip.png" alt="Default style showing a skipped meal" width="240">](assets/mess/default-skip.png) | [<img src="assets/mess/bubbles-skip.png" alt="Bubbles style showing a skipped meal" width="240">](assets/mess/bubbles-skip.png) | [<img src="assets/mess/singular-skip.png" alt="Singular style showing a skipped meal" width="240">](assets/mess/singular-skip.png) |
+| Cancelled | [<img src="assets/mess/default-cancel.png" alt="Default style showing a cancelled meal" width="240">](assets/mess/default-cancel.png) | - | [<img src="assets/mess/singular-cancel.png" alt="Singular style showing a cancelled meal" width="240">](assets/mess/singular-cancel.png) |
+| Not registered | [<img src="assets/mess/default-noreg.png" alt="Default style showing an unregistered meal" width="240">](assets/mess/default-noreg.png) | [<img src="assets/mess/bubbles-noreg.png" alt="Bubbles style showing an unregistered meal" width="240">](assets/mess/bubbles-noreg.png) | [<img src="assets/mess/singular-noreg.png" alt="Singular style showing an unregistered meal" width="240">](assets/mess/singular-noreg.png) |
 
-### 3. Add credentials
+##### `category-whitelist`
 
-Edit `vpn.env`:
+Only show menu categories in this list. Matching is case-insensitive and supports slash-separated category names.
 
-```env
-OPENVPN_USER=your-full-iiith-email
-OPENVPN_PASSWORD=your-iiith-password
-```
+##### `category-blacklist`
 
-Create an API key in Mess Portal under **Settings -> API Keys**, then edit `mess.env`:
+Hide menu categories in this list. It cannot be used together with `category-whitelist`.
 
-```env
-MESS_API_KEY=your-mess-portal-api-key
-```
+[Installation Instructions](docs/install-mess.md)
 
-Protect the files:
+### My Couriers
 
-```sh
-chmod 600 vpn.env mess.env iiith.ovpn
-```
+See every package awaiting collection with its courier provider and relative arrival time.
 
-Never commit these three files.
+#### Properties
 
-### 4. Start the VPN sidecar
+| Name | Type | Required | Default |
+| --- | --- | --- | --- |
+| `collapseAfter` | integer | no | `3` |
 
-```sh
-docker compose up -d
-docker compose ps
-```
+##### `collapseAfter`
 
-Both services should become healthy/running. View connection logs with:
+The number of couriers to show before the "SHOW MORE" button appears.
 
-```sh
-docker compose logs vpn
-```
+[Installation Instructions](docs/install-courier.md)
 
-### 5. Install the widget
+### Moodle Timeline
 
-Copy `widget.yml` into your Glance widgets directory, for example:
+Keep upcoming Moodle assignment deadlines on your dashboard, with direct links, exact due dates, and relative countdowns. The default view includes up to 10 events from the next 60 days and collapses after five.
 
-```sh
-cp widget.yml /path/to/glance/config/widgets/iiith-mess.yml
-```
+#### Properties
 
-Make these variables available to the Glance container:
+| Name | Type | Required | Default |
+| --- | --- | --- | --- |
+| `url` | string | yes | |
+| `limit` | integer | no | `10` |
+| `lookback_days` | integer | no | `0` |
+| `horizon_days` | integer | no | `60` |
+| `collapseAfter` | integer | no | `5` |
 
-```env
-IIITH_MESS_PROXY_URL=http://iiith-mess:8081
-TZ=Asia/Kolkata
-```
+##### `url`
 
-If you use Compose, add them through `environment` or an `env_file`, then recreate Glance so it receives them:
+The Moodle iCalendar feed URL, supplied through `MOODLE_ICAL_URL`.
 
-```sh
-docker compose up -d --force-recreate glance
-```
+##### `limit`
 
-Include the widget on a page:
+The maximum number of assignments to return.
 
-```yaml
-widgets:
-  - $include: widgets/iiith-mess.yml
-```
+##### `lookback_days`
 
-Glance automatically reloads after the include is added.
+The number of days before today to include.
 
-## Options
+##### `horizon_days`
 
-Edit the `options` block in `widget.yml`:
+The number of days ahead to include.
 
-| Option | Default | Description |
-| --- | --- | --- |
-| `timingMess` | `yuktahar` | Mess whose serving windows determine the ongoing or next meal |
-| `collapseAfter` | `6` | Menu items shown before the list collapses |
+##### `collapseAfter`
 
-## How routing works
+The number of assignments to show before the "SHOW MORE" button appears.
+
+[Installation Instructions](docs/install-moodle.md)
+
+## How It Works
 
 ```text
-Glance -> iiith-mess:8081 -> Caddy -> IIITH OpenVPN -> mess.iiit.ac.in
+Glance -> iiith-widgets:8081 -> Caddy -> IIITH OpenVPN -> Mess/Courier APIs
+Glance -> iiith-widgets:8081 -> Caddy -> iCal helper -> IIITH OpenVPN -> Moodle calendar
    |
    +-> every other widget -> normal Docker/host internet route
 ```
 
-The proxy shares the VPN container's network namespace. OpenVPN installs only IIITH private-network routes, while the host and Glance container retain their existing default routes.
+The VPN, proxy, and iCal helper share one isolated network namespace. OpenVPN installs only IIITH private-network routes, so neither the host nor unrelated Glance widgets are sent through the college VPN.
 
 ## Security
 
-- `Caddyfile` accepts only `GET` requests.
-- Only menus, capacities, registrations, and meal timings are allowed.
+- Caddy accepts only `GET` requests to the exact Mess and Courier API paths used by the widgets.
+- Moodle requests are restricted to calendar URLs on `courses.iiit.ac.in`.
 - Registration, cancellation, billing, profile, feedback, and other account endpoints return `403`.
-- The Mess API key exists only in `mess.env` and the proxy container.
-- VPN credentials exist only in `vpn.env` and the VPN container.
-- The proxy is available only on the shared Docker network; no host port is published.
-
-## Troubleshooting
-
-### VPN is unhealthy
-
-Confirm `/dev/net/tun` exists and inspect `docker compose logs vpn`. If the VPN endpoint changed, rerun `prepare-vpn.sh` using a freshly downloaded profile, then recreate the stack:
-
-```sh
-docker compose up -d --force-recreate
-```
-
-### Widget cannot resolve `iiith-mess`
-
-Verify Glance and the VPN service share the network configured by `GLANCE_NETWORK`:
-
-```sh
-docker network inspect glance_default
-```
-
-### Widget shows no registration
-
-The API returned no active registration for that meal/day, or the registration was cancelled. Check the Mess Portal directly to confirm.
-
-### Test connectivity from Glance
-
-```sh
-docker exec glance wget -qO- http://iiith-mess:8081/api/registration
-```
-
-Direct access to `mess.iiit.ac.in` from the host may still fail. That is expected and confirms traffic is isolated to the VPN sidecar.
+- Mess and Courier credentials exist only in the proxy container.
+- VPN credentials exist only in the VPN container.
+- The Moodle calendar URL is passed only to Glance and the iCal helper.
+- The proxy has no published host port and is reachable only from the shared Docker network.
 
 ## Credits
 
-API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP). This project talks to the Mess Portal REST API directly; it does not run an MCP server.
+Mess API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP).
+Moodle calendar parsing uses [AWildLeon/Glance-iCal-Events](https://github.com/AWildLeon/Glance-iCal-Events).
 
 ## License
 
