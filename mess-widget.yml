@@ -65,9 +65,11 @@
       .meal-bubble-unregistered { background: #12151b; }
       .meal-bubble-skipped { background: #5c470f; }
       .meal-bubble-cancelled { background: #461f1c; }
-      .meal-bubble-palash { background: hsl(256 35% 42%); }
+      .meal-bubble-palash { background: #322745; }
       .meal-bubble-kadamba { background: #0a3a0a; }
       .meal-bubble-kadamba-nonveg { background: #540a1e; }
+      .meal-bubble-bakul { background: #1d0a4a; }
+      .meal-bubble-bakul-nonveg { background: #320a32; }
       .meal-bubble-yuktahar { background: #0a382f; }
       .meal-bubble-yuktahar-jain { background: #1f350a; }
       .meal-bubble-registered { background: var(--color-positive); }
@@ -125,9 +127,11 @@
       .singular-heading-unregistered { color: var(--color-text-subdue); }
       .singular-heading-skipped { color: #f9d65c; }
       .singular-heading-cancelled { color: #ffc2b5; }
-      .singular-heading-palash { color: hsl(256 55% 68%); }
+      .singular-heading-palash { color: #e8cfff; }
       .singular-heading-kadamba { color: #70ff94; }
       .singular-heading-kadamba-nonveg { color: #ffa2b8; }
+      .singular-heading-bakul { color: #a09cff; }
+      .singular-heading-bakul-nonveg { color: #f57bed; }
       .singular-heading-yuktahar { color: #77f8e1; }
       .singular-heading-yuktahar-jain { color: #bbf467; }
       .singular-heading-registered { color: var(--color-positive); }
@@ -229,7 +233,7 @@
           {{ range $bubbleIndex, $bubbleTiming := (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
             {{ $bubbleMeal := $bubbleTiming.String "meal" }}
             {{ $bubbleMess := $regs.String (concat "data." $bubbleMeal ".meal_mess") }}
-            {{ $bubbleMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $bubbleMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $bubbleMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $bubbleMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "bakul-nonveg" "Bakul (NV)" | replaceAll "bakul-veg" "Bakul (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
             {{ $bubbleCancelled := $regs.String (concat "data." $bubbleMeal ".cancelled_at") }}
             {{ $bubbleSkipped := $regs.Bool (concat "data." $bubbleMeal ".metadata.skipping") }}
             {{ $bubbleClass := "meal-bubble-unregistered" }}
@@ -242,6 +246,8 @@
               {{ if ne (findMatch "(?i)palash" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-palash" }}
               {{ else if ne (findMatch "(?i)kadamba-nonveg" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-kadamba-nonveg" }}
               {{ else if ne (findMatch "(?i)kadamba" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-kadamba" }}
+              {{ else if ne (findMatch "(?i)bakul-nonveg" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-bakul-nonveg" }}
+              {{ else if ne (findMatch "(?i)bakul" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-bakul" }}
               {{ else if ne (findMatch "(?i)yuktahar-jain" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-yuktahar-jain" }}
               {{ else if ne (findMatch "(?i)yuktahar" $bubbleMess) "" }}{{ $bubbleClass = "meal-bubble-yuktahar" }}{{ end }}
             {{ end }}
@@ -255,7 +261,7 @@
           {{ range $defaultIndex, $defaultTiming := (.Subrequest "timings").JSON.Array (concat "data." $timingMess) }}
             {{ $defaultMeal := $defaultTiming.String "meal" }}
             {{ $defaultMess := $regs.String (concat "data." $defaultMeal ".meal_mess") }}
-            {{ $defaultMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $defaultMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $defaultMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $defaultMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "bakul-nonveg" "Bakul (NV)" | replaceAll "bakul-veg" "Bakul (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
             {{ $defaultCancelled := $regs.String (concat "data." $defaultMeal ".cancelled_at") }}
             {{ $defaultSkipped := $regs.Bool (concat "data." $defaultMeal ".metadata.skipping") }}
             {{ $defaultClass := "singular-heading-unregistered" }}
@@ -264,6 +270,8 @@
             {{ else if ne (findMatch "(?i)palash" $defaultMess) "" }}{{ $defaultClass = "singular-heading-palash" }}
             {{ else if ne (findMatch "(?i)kadamba-nonveg" $defaultMess) "" }}{{ $defaultClass = "singular-heading-kadamba-nonveg" }}
             {{ else if ne (findMatch "(?i)kadamba" $defaultMess) "" }}{{ $defaultClass = "singular-heading-kadamba" }}
+            {{ else if ne (findMatch "(?i)bakul-nonveg" $defaultMess) "" }}{{ $defaultClass = "singular-heading-bakul-nonveg" }}
+            {{ else if ne (findMatch "(?i)bakul" $defaultMess) "" }}{{ $defaultClass = "singular-heading-bakul" }}
             {{ else if ne (findMatch "(?i)yuktahar-jain" $defaultMess) "" }}{{ $defaultClass = "singular-heading-yuktahar-jain" }}
             {{ else if ne (findMatch "(?i)yuktahar" $defaultMess) "" }}{{ $defaultClass = "singular-heading-yuktahar" }}{{ end }}
             <div>
@@ -284,7 +292,7 @@
             {{ $panelMess := $regs.String (concat "data." $panelMeal ".meal_mess") }}
             {{ $panelMenuMess := $panelMess }}
             {{ if eq $panelMenuMess "yuktahar-jain" }}{{ $panelMenuMess = "yuktahar" }}{{ end }}
-            {{ $panelMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $panelMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
+            {{ $panelMessLabel := replaceAll "kadamba-nonveg" "Kadamb (NV)" $panelMess | replaceAll "kadamba-veg" "Kadamb (V)" | replaceAll "bakul-nonveg" "Bakul (NV)" | replaceAll "bakul-veg" "Bakul (V)" | replaceAll "yuktahar-jain" "Yuktahar (J)" | replaceAll "yuktahar" "Yuktahar" }}
             {{ $panelCancelled := $regs.String (concat "data." $panelMeal ".cancelled_at") }}
             {{ $panelSkipped := $regs.Bool (concat "data." $panelMeal ".metadata.skipping") }}
             {{ $extrasRequest := "breakfastExtras" }}
@@ -301,6 +309,8 @@
               {{ if ne (findMatch "(?i)palash" $panelMess) "" }}{{ $headingClass = "singular-heading-palash" }}
               {{ else if ne (findMatch "(?i)kadamba-nonveg" $panelMess) "" }}{{ $headingClass = "singular-heading-kadamba-nonveg" }}
               {{ else if ne (findMatch "(?i)kadamba" $panelMess) "" }}{{ $headingClass = "singular-heading-kadamba" }}
+              {{ else if ne (findMatch "(?i)bakul-nonveg" $panelMess) "" }}{{ $headingClass = "singular-heading-bakul-nonveg" }}
+              {{ else if ne (findMatch "(?i)bakul" $panelMess) "" }}{{ $headingClass = "singular-heading-bakul" }}
               {{ else if ne (findMatch "(?i)yuktahar-jain" $panelMess) "" }}{{ $headingClass = "singular-heading-yuktahar-jain" }}
               {{ else if ne (findMatch "(?i)yuktahar" $panelMess) "" }}{{ $headingClass = "singular-heading-yuktahar" }}{{ end }}
             {{ end }}
