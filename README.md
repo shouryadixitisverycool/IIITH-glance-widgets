@@ -12,6 +12,7 @@ A collection of [Glance](https://github.com/glanceapp/glance) widgets for IIIT r
 
 See all four meal registrations at a glance.
 
+[<img src="assets/mess/default-yuk.png" alt="Default style showing Yuktahar" width="240">](assets/mess/default-yuk.png)
 
 #### Properties
 
@@ -136,7 +137,7 @@ The VPN, proxy, and iCal helper share one isolated network namespace. OpenVPN in
 
 ## Credits
 
-Mess API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP).
+Mess API behavior and endpoint discovery are based on [NJP6969/IIITH-mess-MCP](https://github.com/NJP6969/IIITH-mess-MCP).  
 Moodle calendar parsing uses [AWildLeon/Glance-iCal-Events](https://github.com/AWildLeon/Glance-iCal-Events).
 
 ## License
